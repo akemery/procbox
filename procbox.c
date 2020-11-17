@@ -30,7 +30,7 @@ void *malloc(size_t size)
   //argvs[0] = PYTHON;
   //argvs[argvsize - 1] = NULL;  
   //memcpy(&argvs[1], )
-  char *command = "/home/enselme/Documents/projects/procrank/procrank.py %d %d >text.txt";
+  char *command = "./procrank.py %d %d ";
   char buf[64];
   void *p = NULL;
   pid_t pid = getpid();
