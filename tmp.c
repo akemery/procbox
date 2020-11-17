@@ -2,74 +2,28 @@
 #include <stdio.h>
 #include <string.h>
 
-int main(){
-
-	//char *filename = "/proc/procrank";
-	char line[256];
-	char *pids[1000];
-	char *uss[1000];
-	char *vss[1000];
-	char *rss[1000];
-	char *pss[1000];
-	//char c;
-	FILE *file;
-	file = fopen("./procrank.txt","r");
-	if (file == NULL){
-		perror("Error while opening the file!\n");
-		exit(EXIT_FAILURE);
-	}
-	printf("The content of /proc/procrank file are:\n");
-
-	// while((c = fgetc(file)) != EOF){
-	// 	printf("%c", c);
-	// }
-	// 	fclose(file);
-	// 	return 0;
-	
-	// fscanf(file, "%[^\n]", line);
-	// printf("Data from file:\n%s", line);
-	// fclose(file);
-	// printf("bro %d\n", line[0] );
-	int i = 0;
-	while(fgets(line, sizeof(line), file) && i<15){
-		char  *token = strtok(line, "|");
-		/*
-		strtok permet de décomposer une chaine de caractère suivant un délimiteur. La boucle while en dessous 
-		permet de parcourir les différentes valeurs obtenues lors de la décomposition. une ligne ressemble à:
-		ligne : " 279 |   systemd-journal |     366284 |     174448 |      64568 |     116482"
-		de la gauche vers la droite nous avons respectivement le PID, le nom du process, le VSS, le RSS, l'USS et
-		le PSS. Ce sont les colonnes 1 et 3 qui m'interessent donc, d'ou les if que je fais dans le while
-		*/
-		int j = 0;
-		while(token != NULL){
-			//printf("Token: %s\n",token );
-			//pids[i] = token;
-			//printf("pid de token%s\n", pids[i]);
-			printf("token:%s\n", token);
-			 if (j==0){
-			 	pids[i] = token;
-			 	printf("pid[%d] vaut %s\n",i, pids[i]);
-			 	if (i>1){
-			 		printf("pid[%d] vallait %s\n",i-1, pids[i-1]);
-			 	}
-			 }
-			 else if(j==3){
-			 	uss[i] = token;
-			 }
-			 else{
-			 	token = strtok(NULL, "|");
-			 }
-			
-			j++;
-		}
-		i += 1;
-
-	}
-	fclose(file);
-	//printf("%s\n", pids);
-	for (int i = 0; i < sizeof(*pids); ++i)
-		{
-			printf("pids[%d] = %s\n",i, pids[i]);
-		}
-
+int main(int argc, char *argv[]){
+  char line[256];
+  int pids[1000];
+  int uss[1000];
+  int vss[1000];
+  int rss[1000];
+  int pss[1000];
+  char name[50]; 
+  char c;
+  FILE *file;
+  file = fopen("./procrank.txt","r");
+  if (file == NULL){
+    perror("Error while opening the file!\n");
+    exit(EXIT_FAILURE);
+  }
+  int i = 0;
+  while(fgets(line, sizeof(line), file)){
+    sscanf(line, "%d %c %s %c %d %c %d %c %d %c %d", &pids[i], &c, name, &c,  &uss[i], &c,  &vss[i], &c,  &rss[i], &c,  &pss[i]); 
+    i++;
+  }
+  fclose(file);
+  for (int j = 0; j < i; j++){
+    printf("pids[%d] = %d | uss[%d] = %d | vss[%d] = %d | rss[%d] = %d | pss[%d] = %d\n",j, pids[j],j, uss[j],j, vss[j],j, rss[j],j, pss[j]);
+  }
 }
