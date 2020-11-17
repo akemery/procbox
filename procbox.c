@@ -35,8 +35,8 @@ void *malloc(size_t size)
   void *p = NULL;
   pid_t pid = getpid();
   snprintf(buf, 64, command, pid, size);
+  printf("Juste pour un test\n");
   fprintf(stderr, "process (%d) asked for %ld bytes memory\n", pid, size);
-  fprintf(stderr, "Command to execute: (%d)\n", system(command));
   system(command);
    
   p = real_malloc(size);
