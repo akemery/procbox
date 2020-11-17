@@ -13,7 +13,7 @@ int main(){
 	char *pss[1000];
 	//char c;
 	FILE *file;
-	file = fopen("/proc/procrank","r");
+	file = fopen("./procrank.txt","r");
 	if (file == NULL){
 		perror("Error while opening the file!\n");
 		exit(EXIT_FAILURE);
