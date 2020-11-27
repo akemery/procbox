@@ -7,8 +7,11 @@
 #include <dlfcn.h>
 #include <string.h>
 #include <fcntl.h>
+#include <stdbool.h> 
 
 #define LIMIT_SIZE 1048576 //1GB
+
+bool is_open = false;
 
 static void* (*real_malloc)(size_t)=NULL;
 typedef int (*real_open_type)(const char *pathname, int flags);
@@ -17,11 +20,20 @@ typedef int (*real_open_type)(const char *pathname, int flags);
 int open(const char *pathname, int flags, ...)
 {
   //This is our custom open function
+
   real_open_type real_open;
   real_open = (real_open_type)dlsym(RTLD_NEXT,"open");
   fprintf(stderr, "The program is trying to make an open call\n" );
+  if (is_open)
+  {
+    return 0;
+  }
+  else
+  {
+    return real_open(pathname, flags);
+  }
   //printf("You can't make this call anymore\n");
-  return 0 ;//real_open(pathname,flags);
+  //return 0 ;//real_open(pathname,flags);
 }
 
 static void sandbox_init(void)
@@ -105,6 +117,7 @@ void *malloc(size_t size)
        if ((size + uss[j]) >= LIMIT_SIZE)
        {
          fprintf(stderr, "The process is going to exceed the LIMIT_SIZE with%ld K\n", (LIMIT_SIZE - (size + uss[j])));
+         is_open = true;
        }
        else
        {
