@@ -11,46 +11,18 @@
 #define LIMIT_SIZE 1048576 //1GB
 
 static void* (*real_malloc)(size_t)=NULL;
+typedef int (*real_open_type)(const char *pathname, int flags);
 
-// static void process_procrank(pid_t pid, size_t size){
-//   char line[256];
-//   int pids[1000];
-//   int vss[1000];
-//   int rss[1000];
-//   int uss[1000];
-//   int pss[1000];
-//   char name[1000];
-//   char c;
-//   FILE *file;
 
-//   size *= 1024; // Kb is the unit we are working with; size is obtained in bytes 
-//   file = fopen("/proc/procrank", "r");
-//   if (file == NULL)
-//   {
-//     perror("Error while opening the file!");
-//     exit(EXIT_FAILURE);
-//   }
-//   int i = 0;
-//   while(fgets(line, sizeof(line), file)){
-//     sscanf(line, "%d %c %s %c %d %c %d %c %d %c %d", &pids[i], &c, name, &c, &vss[i], &c, &rss[i], &c, &uss[i], &c, &pss[i]);
-//     i++;
-//   }
-//   fclose(file);
-//   for (int j = 0; j < i; ++j)
-//   {
-//     if (pids[j] == pid) //process found!
-//     {
-//       if ((size + uss[i]) >= LIMIT_SIZE)
-//       {
-//         fprintf(stderr, "What to do? the process is going to exceed the LIMIT_SIZE with%ld K\n", (LIMIT_SIZE - (size + uss[i])));
-//       }
-//       else
-//       {
-//         fprintf(stderr, "All is fine for the moment!\n");
-//       }
-//     }
-//   }
-// }
+int open(const char *pathname, int flags, ...)
+{
+  //This is our custom open function
+  real_open_type real_open;
+  real_open = (real_open_type)dlsym(RTLD_NEXT,"open");
+  fprintf(stderr, "The program is trying to make an open call\n" );
+  //printf("You can't make this call anymore\n");
+  return 0 ;//real_open(pathname,flags);
+}
 
 static void sandbox_init(void)
 {
@@ -61,24 +33,16 @@ static void sandbox_init(void)
   printf("Init ok\n");
 }
 
+
+
 void *malloc(size_t size)
 {
   if(real_malloc==NULL) {
     sandbox_init();
   }
- // int argvsize = 5;
-  //char **argvs = malloc(argvsize * sizeof(*argvs));
-  //char *newenv[] = { NULL };
-  //argvs[0] = PYTHON;
-  //argvs[argvsize - 1] = NULL;  
-  //memcpy(&argvs[1], )
-  //char *command = "./procrank.py %d %d";
-  //char buf[64];
+
   void *p = NULL;
   pid_t pid = getpid();
- // snprintf(buf, 64, command, pid, size);
-  //process_procrank(pid,size);
-  //char *line[256];
   int pids[1000];
   int vss[1000];
   int rss[1000];
@@ -87,7 +51,6 @@ void *malloc(size_t size)
   char name[1000];
   char *line = (char *) calloc(100,sizeof(char)); 
   int read_return = 5;
-  //FILE *file;
 
    size *= 1024; // Kb is the unit we are working with; size is obtained in bytes 
    int file = open("/proc/procrank", O_RDONLY);
@@ -121,36 +84,49 @@ void *malloc(size_t size)
         k = 0;
       }
     }
+   // fprintf(stderr, "store0:%d store1%s\n", );
     pids[line_number] = atoi(store[0]);
     uss[line_number] = atoi(store[3]);
+    vss[line_number] = atoi(store[1]);
+    pss[line_number] = atoi(store[4]);
+    rss[line_number] = atoi(store[2]);
     line_number++;
 
    }
-  // fprintf(stderr, "%s\n %d bytes\n", line, read_return);
-  // int i = 0;
-  // while(fgets(line, sizeof(line), file)){
-  //   sscanf(line, "%d %c %s %c %d %c %d %c %d %c %d", &pids[i], &c, name, &c, &vss[i], &c, &rss[i], &c, &uss[i], &c, &pss[i]);
-  //   i++;
-  // }
+   //fprintf(stderr, "%s\n %d bytes\n", line, read_return);
   close(file);
    for (int j = 0; j < line_number; ++j)
    {
+
+    //fprintf(stderr, "pid[%d]= %d et pid = %d\n" ,pids[j],pid );
+   // fprintf(stderr, " %d et pid = %d\n" ,pids[j],pid );
      if (pids[j] == pid) //process found!
      {
        if ((size + uss[j]) >= LIMIT_SIZE)
        {
-         fprintf(stderr, "What to do? the process is going to exceed the LIMIT_SIZE with%ld K\n", (LIMIT_SIZE - (size + uss[j])));
+         fprintf(stderr, "The process is going to exceed the LIMIT_SIZE with%ld K\n", (LIMIT_SIZE - (size + uss[j])));
        }
        else
        {
-         fprintf(stderr, "All is fine for the moment!\n");
+         fprintf(stderr, "%ld %d %d %d %d\n\n", size*1024,vss[j],uss[j],rss[j],pss[j]);
        }
      }
+   else
+   {
+    if (size > LIMIT_SIZE)
+    {
+    //  fprintf(stderr, "The process is asking for too memory space. Allowed:%d, requesting:%ld\n",LIMIT_SIZE, size );
+    }
    }
-
-  fprintf(stderr, "process (%d) asked for %ld bytes memory\n", pid, size);
+  }
+   //  clock_t begin = clock();
+   // clock_t end = clock();
+   //double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+  fprintf(stderr, "process (%d) asked for %ldK memory\n", pid, size*1024);
+  //fprintf(stderr, "tim:%f\n", time_spent);
   //system(command);
   p = real_malloc(size);
+      fprintf(stderr, "ppp%p\n", p);
   return p;
 }
 
