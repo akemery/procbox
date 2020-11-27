@@ -14,7 +14,40 @@
 bool is_open = false;
 
 static void* (*real_malloc)(size_t)=NULL;
+static ssize_t (*real_write)(int fd, const void *buf, size_t count);
+static ssize_t (*real_read)(int fd, void *buf, size_t count);
 typedef int (*real_open_type)(const char *pathname, int flags);
+
+
+ssize_t write(int fd, const void *buf, size_t count)
+{
+  fprintf(stderr, "The programm is trying to make write call\n");
+  real_write = dlsym(RTLD_NEXT,"write");
+  if (is_open)
+  {
+    return 0;
+  }
+  else
+  {
+    return real_write(fd, buf, count);
+  }
+  
+}
+
+ssize_t read(int fd, void *buf, size_t count)
+{
+  fprintf(stderr, "Read syscall is made\n");
+  real_read = dlsym(RTLD_NEXT, "read");
+  if (is_open)
+  {
+    return 0;
+  }
+  else
+  {
+    return real_read(fd, buf, count);
+  }
+  
+}
 
 
 int open(const char *pathname, int flags, ...)
