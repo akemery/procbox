@@ -98,7 +98,7 @@ void *malloc(size_t size)
   int read_return = 5;
 
    size *= 1024; // Kb is the unit we are working with; size is obtained in bytes 
-   int file = open("/proc/procrank", O_RDONLY);
+   int file = open("procrank.txt", O_RDONLY);
    if (file == -1)
    {
      perror("Error while opening the file!");
